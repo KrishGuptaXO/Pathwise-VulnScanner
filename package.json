@@ -1,23 +1,26 @@
 {
   "name": "vulnscanner-todoku",
-  "private": true,
   "version": "0.0.0",
-  "type": "module",
+  "private": true,
   "bin": {
     "todoku": "./dist/cli.js"
   },
+  "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "build": "tsc -b && vite build && npm run build:analyzer",
     "lint": "oxlint .",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "build:analyzer": "tsc -p tsconfig.analyzer.json",
+    "test": "npm run build:analyzer && node --test test/*.test.mjs"
   },
   "dependencies": {
     "commander": "^15.0.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "typescript": "~6.0.2"
   },
   "devDependencies": {
     "@types/node": "^24.13.3",
@@ -26,7 +29,6 @@
     "@vitejs/plugin-react": "^6.0.4",
     "oxfmt": "^0.64.0",
     "oxlint": "^1.75.0",
-    "typescript": "~6.0.2",
     "vite": "^8.2.0"
   }
 }
