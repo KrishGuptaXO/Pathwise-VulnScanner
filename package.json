@@ -3,23 +3,25 @@
   "version": "0.0.0",
   "private": true,
   "bin": {
-    "todoku": "./dist/cli.js"
+    "todoku": "./dist/cli/index.js"
   },
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build && npm run build:analyzer",
+    "build": "tsc -b && vite build && npm run build:cli",
     "lint": "oxlint .",
     "format": "oxfmt",
     "format:check": "oxfmt --check",
     "preview": "vite preview",
     "build:analyzer": "tsc -p tsconfig.analyzer.json",
-    "test": "npm run build:analyzer && node --test test/*.test.mjs"
+    "test": "npm run build:cli && node --test test/*.test.mjs",
+    "build:cli": "tsc -p tsconfig.cli.json"
   },
   "dependencies": {
     "commander": "^15.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
+    "tar": "^7.5.22",
     "typescript": "~6.0.2"
   },
   "devDependencies": {
