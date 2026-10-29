@@ -1,0 +1,12 @@
+{
+  "name": "demo-app",
+  "version": "1.0.0",
+  "private": true,
+  "main": "src/index.js",
+  "dependencies": {
+    "debug": "2.2.0",
+    "lodash": "4.17.20",
+    "minimist": "1.2.0",
+    "mkdirp": "0.5.1"
+  }
+}
