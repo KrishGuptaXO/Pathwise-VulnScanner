@@ -1,0 +1,8 @@
+{
+  "extends": "./tsconfig.analyzer.json",
+  "compilerOptions": {
+    "rootDir": ".",
+    "outDir": "dist"
+  },
+  "include": ["analyzer/**/*.ts", "pipeline/**/*.ts", "cli/**/*.ts"]
+}
