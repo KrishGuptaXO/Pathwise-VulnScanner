@@ -1,122 +1,55 @@
-import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from './assets/vite.svg'
-import heroImg from './assets/hero.png'
+import { useRef, useState } from 'react'
 import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
-
-  return (
-    <>
-      <section id="center">
-        <div className="hero">
-          <img src={heroImg} className="base" width="170" height="179" alt="" />
-          <img src={reactLogo} className="framework" alt="React logo" />
-          <img src={viteLogo} className="vite" alt="Vite logo" />
-        </div>
-        <div>
-          <h1>Get started</h1>
-          <p>
-            Edit <code>src/App.tsx</code> and save to test <code>HMR</code>
-          </p>
-        </div>
-        <button
-          type="button"
-          className="counter"
-          onClick={() => setCount((count) => count + 1)}
-        >
-          Count is {count}
-        </button>
-      </section>
-
-      <div className="ticks"></div>
-
-      <section id="next-steps">
-        <div id="docs">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#documentation-icon"></use>
-          </svg>
-          <h2>Documentation</h2>
-          <p>Your questions, answered</p>
-          <ul>
-            <li>
-              <a href="https://vite.dev/" target="_blank">
-                <img className="logo" src={viteLogo} alt="" />
-                Explore Vite
-              </a>
-            </li>
-            <li>
-              <a href="https://react.dev/" target="_blank">
-                <img className="button-icon" src={reactLogo} alt="" />
-                Learn more
-              </a>
-            </li>
-          </ul>
-        </div>
-        <div id="social">
-          <svg className="icon" role="presentation" aria-hidden="true">
-            <use href="/icons.svg#social-icon"></use>
-          </svg>
-          <h2>Connect with us</h2>
-          <p>Join the Vite community</p>
-          <ul>
-            <li>
-              <a href="https://github.com/vitejs/vite" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#github-icon"></use>
-                </svg>
-                GitHub
-              </a>
-            </li>
-            <li>
-              <a href="https://chat.vite.dev/" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#discord-icon"></use>
-                </svg>
-                Discord
-              </a>
-            </li>
-            <li>
-              <a href="https://x.com/vite_js" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#x-icon"></use>
-                </svg>
-                X.com
-              </a>
-            </li>
-            <li>
-              <a href="https://bsky.app/profile/vite.dev" target="_blank">
-                <svg
-                  className="button-icon"
-                  role="presentation"
-                  aria-hidden="true"
-                >
-                  <use href="/icons.svg#bluesky-icon"></use>
-                </svg>
-                Bluesky
-              </a>
-            </li>
-          </ul>
-        </div>
-      </section>
-
-      <div className="ticks"></div>
-      <section id="spacer"></section>
-    </>
-  )
+type Verdict = 'reachable' | 'unreachable' | 'undetermined'
+type Finding = { id: string; name: string; version: string; severity: 'critical' | 'high' | 'moderate' | 'low'; verdict: Verdict; title: string; direct: boolean; fixed: string; path: string[]; reason: string }
+const labels = { reachable: 'Reachable', unreachable: 'Present but unreachable', undetermined: 'Undetermined' }
+const sample: Finding[] = [
+  { id: 'DEMO-001', name: 'lodash', version: '4.17.20', severity: 'high', verdict: 'reachable', title: 'Command injection in template', direct: true, fixed: '4.17.21', path: ['src/index.ts', 'src/utils/render.ts', 'lodash · template()'], reason: 'A static call path connects an application entry point to the vulnerable package. Prioritize this dependency for remediation.' },
+  { id: 'DEMO-002', name: 'ms', version: '0.7.0', severity: 'moderate', verdict: 'reachable', title: 'Regular expression denial of service', direct: false, fixed: '2.0.0', path: ['src/index.ts', 'debug · formatArgs()', 'ms · parse()'], reason: 'The application reaches this transitive dependency through debug. Review the parent dependency for an upgrade.' },
+  { id: 'DEMO-003', name: 'minimist', version: '1.2.5', severity: 'critical', verdict: 'unreachable', title: 'Prototype pollution', direct: false, fixed: '1.2.6', path: [], reason: 'No static path from the entry points was found, and this sample analysis reports no blocking gaps. This verdict is scoped to the analyzed entry points.' },
+  { id: 'DEMO-004', name: 'minimist', version: '0.0.8', severity: 'moderate', verdict: 'unreachable', title: 'Prototype pollution', direct: false, fixed: '0.2.4', path: [], reason: 'This separate package instance is present in the dependency tree but has no discovered application path or blocking analysis gaps.' },
+  { id: 'DEMO-005', name: 'serialize-javascript', version: '3.0.0', severity: 'high', verdict: 'undetermined', title: 'Cross-site scripting', direct: true, fixed: '3.1.0', path: [], reason: 'A dynamic import could not be resolved. The analyzer cannot exclude a hidden path to this package; manual review is required.' },
+]
+function Icon({ name, size = 18 }: { name: string; size?: number }) {
+  const paths: Record<string, string> = { grid: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z', branch: 'M6 3v12a4 4 0 0 0 8 0V9 M3 6h6 M11 6l3 3 3-3', shield: 'M12 3l8 3v6c0 5-8 9-8 9s-8-4-8-9V6z M8 12l3 3 5-6', search: 'M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16 M16 16l6 6', arrow: 'M5 12h14 M14 7l5 5-5 5', upload: 'M12 16V3 M7 8l5-5 5 5 M4 15v6h16v-6', download: 'M12 3v13 M7 11l5 5 5-5 M4 17v4h16v-4', code: 'M8 6l-6 6 6 6 M16 6l6 6-6 6 M14 3l-4 18', book: 'M12 5v16 M3 3l9 2 9-2v16l-9 2-9-2z' }
+  return <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d={paths[name] || paths.shield} /></svg>
 }
-
+function App() {
+  const [findings, setFindings] = useState(sample)
+  const [selected, setSelected] = useState(sample[0])
+  const [filter, setFilter] = useState('all')
+  const [search, setSearch] = useState('')
+  const [view, setView] = useState('Overview')
+  const [modal, setModal] = useState(false)
+  const [error, setError] = useState('')
+  const [demo, setDemo] = useState(true)
+  const file = useRef<HTMLInputElement>(null)
+  const visible = findings.filter(f => (filter === 'all' || f.verdict === filter) && `${f.name} ${f.title} ${f.id}`.toLowerCase().includes(search.toLowerCase()))
+  function exportReport() {
+    const url = URL.createObjectURL(new Blob([JSON.stringify({ source: demo ? 'illustrative-demo' : 'imported', findings }, null, 2)], { type: 'application/json' }))
+    const a = document.createElement('a'); a.href = url; a.download = 'pathwise-report.json'; a.click(); URL.revokeObjectURL(url)
+  }
+  async function importReport(input: File) {
+    try {
+      const data = JSON.parse(await input.text())
+      if (!Array.isArray(data.findings) || !data.findings.length || !data.findings.every((f: Finding) => f && typeof f.id === 'string' && typeof f.name === 'string' && typeof f.version === 'string' && typeof f.title === 'string' && typeof f.reason === 'string' && typeof f.fixed === 'string' && typeof f.direct === 'boolean' && ['critical','high','moderate','low'].includes(f.severity) && Object.hasOwn(labels, f.verdict) && Array.isArray(f.path) && f.path.every(p => typeof p === 'string'))) throw new Error('Invalid report')
+      setFindings(data.findings); setSelected(data.findings[0]); setDemo(data.source === 'illustrative-demo'); setModal(false); setError(''); setFilter('all')
+    } catch { setError('Could not read this report. Use the JSON format shown below with at least one complete finding.') }
+  }
+  return <div className="shell">
+    <aside className="sidebar"><a className="brand" href="#" onClick={() => setView('Overview')}><span className="brand-mark"><Icon name="branch" size={24}/></span>pathwise<span className="brand-dot">.</span></a><div className="workspace"><span className="workspace-avatar">P</span><div>Personal workspace<small>Developer plan</small></div><span>⌄</span></div><div className="nav-label">WORKSPACE</div><nav>{['Overview','Findings','Call graph'].map((item,i) => <button key={item} className={view === item ? 'active' : ''} onClick={() => setView(item)}><Icon name={['grid','shield','branch'][i]}/>{item}{item === 'Findings' && <span className="nav-count">{findings.length}</span>}</button>)}</nav><div className="sidebar-bottom"><div className="local"><span className="online"/> LOCAL WORKSPACE</div><p>Your code stays yours.<br/>Dependencies are never installed.</p><a href="https://github.com/KrishGuptaXO/Pathwise-VulnScanner" target="_blank" rel="noreferrer"><Icon name="book"/> Project documentation ↗</a><div className="profile"><span className="avatar">KG</span><div>Krish Gupta<small>Personal account</small></div></div></div></aside>
+    <div className="main"><header><div>Workspace <span>/</span> <strong>{view}</strong></div><div className="header-right"><span className="pill">CLI · todoku</span><a href="https://github.com/KrishGuptaXO/Pathwise-VulnScanner" target="_blank" rel="noreferrer">GitHub ↗</a></div></header>
+    <main><div className="page-heading"><div><div className="eyebrow">LESS NOISE. MORE SIGNAL.</div><h1>Know what’s actually reachable.</h1><p>Go beyond vulnerability counts. Follow the path to what matters.</p></div><button className="primary" onClick={() => { setError(''); setModal(true) }}><Icon name="upload"/> Import report</button></div>
+    <div className="repo-bar"><div className="repo-icon"><Icon name="code" size={22}/></div><div><strong>{demo ? 'demo-app' : 'Imported report'}</strong><span className="repo-sub">{demo ? 'Illustrative analysis · JavaScript / TypeScript' : 'User-provided findings · JSON report'}</span></div><span className="pill sample">{demo ? 'Sample report' : 'Imported'}</span><div className="repo-meta"><Icon name="branch"/> {demo ? 'main' : 'report'}<span className="divider"/> <span className="online"/> {demo ? 'Explore the demo' : 'Ready to review'}</div></div>
+    <div className="metrics">{(['all','reachable','unreachable','undetermined'] as const).map((key,i) => <button className={`metric ${filter === key ? 'chosen' : ''}`} key={key} onClick={() => setFilter(key)}><div className="metric-label"><span className={`status-dot ${key}`}/>{['Total findings','Reachable','Present but unreachable','Undetermined'][i]}<span className="metric-arrow">↗</span></div><div className="metric-number">{key === 'all' ? findings.length : findings.filter(f=>f.verdict === key).length}<span>{['across your dependencies','prioritize these fixes','no static path found','needs a closer look'][i]}</span></div></button>)}</div>
+    <div className="insight"><span className="insight-symbol">⌁</span><div><strong>Context changes the priority.</strong> {findings.filter(f=>f.verdict==='reachable').length} of {findings.length} findings have a reachable path. Start there.</div><span className="insight-tag">REACHABILITY FIRST</span></div>
+    <div className="section-heading"><div><h2>{view === 'Call graph' ? 'Explore the execution path' : 'Vulnerability findings'} <span>{findings.length}</span></h2><p>{view === 'Call graph' ? 'Select a finding to inspect its path from an application entry point.' : 'The full picture, from dependency to application.'}</p></div><button className="secondary" onClick={exportReport}><Icon name="download"/> Export JSON</button></div>
+    <div className="findings-layout"><section className="findings-panel"><div className="table-tools"><div className="tabs"><button className={filter==='all'?'tab-active':''} onClick={()=>setFilter('all')}>All findings</button><button className={filter==='reachable'?'tab-active':''} onClick={()=>setFilter('reachable')}>Reachable</button></div><label className="search"><Icon name="search" size={15}/><input aria-label="Search findings" placeholder="Search packages…" value={search} onChange={e=>setSearch(e.target.value)}/></label></div><div className="table-scroll"><table><thead><tr><th>PACKAGE / VULNERABILITY</th><th>SEVERITY</th><th>REACHABILITY</th><th/></tr></thead><tbody>{visible.map(f=><tr key={f.id} className={selected.id===f.id?'selected':''} onClick={()=>setSelected(f)}><td><button className="package-button" onClick={()=>setSelected(f)}>{f.name}<span>{f.version}</span></button><small>{f.title}</small></td><td><span className={`severity ${f.severity}`}><i/>{f.severity}</span></td><td><span className={`verdict ${f.verdict}`}><span>{f.verdict==='reachable'?'◉':f.verdict==='unreachable'?'⊘':'◌'}</span>{f.verdict==='unreachable'?'Unreachable':labels[f.verdict]}</span></td><td className="row-arrow">›</td></tr>)}</tbody></table>{!visible.length && <div className="empty">No findings match your filters.<button onClick={()=>{setFilter('all');setSearch('')}}>Clear filters</button></div>}</div><div className="table-footer">Showing {visible.length} of {findings.length} findings<span>Package-level analysis</span></div></section>
+    <aside className="detail"><div className="detail-heading"><span>FINDING DETAILS</span><Icon name="shield" size={16}/></div><h3>{selected.name}<span>@{selected.version}</span></h3><p>{selected.title}</p><div className="detail-badges"><span className={`verdict ${selected.verdict}`}>{labels[selected.verdict]}</span><span className="pill">{selected.direct?'Direct':'Transitive'}</span></div><div className="detail-line"/><div className="detail-label">{selected.verdict==='reachable'?'REACHABLE PATH':'ANALYSIS CONTEXT'}</div>{selected.path.length>0 ? <div className="path">{selected.path.map((p,i)=><div className="path-node" key={p}><span className={i===selected.path.length-1?'terminal':''}>{i===0?'↳':i===selected.path.length-1?'!':'◇'}</span><div><small>{i===0?'ENTRY POINT':i===selected.path.length-1?'VULNERABLE PACKAGE':'APPLICATION / DEPENDENCY'}</small><code>{p}</code></div></div>)}</div> : <div className="no-path"><Icon name="branch"/> {selected.verdict==='undetermined'?'Path could not be determined':'No static path discovered'}</div>}<div className="reason">{selected.reason}</div><div className="fix"><Icon name="arrow"/><div>Available fix<strong>Upgrade to {selected.fixed}</strong></div></div></aside></div>
+    <div className="footnote"><Icon name="shield" size={15}/><span>Static analysis has limits. “Unreachable” is scoped to analyzed entry points. Undetermined never means safe.</span></div><footer><span>pathwise <span className="muted">/</span> Follow the code. Find the risk.</span><span>Powered by OSV.dev & TypeScript <span className="muted">·</span> {demo?'Illustrative data — no live scan performed':'Imported data — not independently verified'}</span></footer>
+    </main></div>
+    {modal && <div className="modal-backdrop" onClick={()=>setModal(false)}><section role="dialog" aria-modal="true" aria-labelledby="import-title" className="modal" onClick={e=>e.stopPropagation()}><button className="close" aria-label="Close dialog" onClick={()=>setModal(false)}>×</button><div className="eyebrow">BRING YOUR OWN FINDINGS</div><h2 id="import-title">Open an analysis report</h2><p>This checkout contains the analyzer, but no scan API. Import a report to explore findings, or use the sample dashboard.</p><button className="upload-zone" onClick={()=>file.current?.click()}><Icon name="upload" size={28}/><strong>Choose a JSON report</strong><span>All processing happens in your browser</span></button><input ref={file} type="file" accept=".json,application/json" hidden onChange={e=>{const f=e.target.files?.[0]; if(f) void importReport(f); e.target.value=''}}/>{error && <p className="error" role="alert">{error}</p>}<details><summary>Report format</summary><p>Export the sample report for a complete example. Each finding requires the fields below. Verdict: reachable, unreachable, or undetermined.</p><pre>{JSON.stringify({ findings: [sample[0]] }, null, 2)}</pre></details><button className="secondary" onClick={()=>{setFindings(sample);setSelected(sample[0]);setDemo(true);setFilter('all');setSearch('');setModal(false)}}>Explore sample report <Icon name="arrow"/></button></section></div>}
+  </div>
+}
 export default App

@@ -1,6 +1,6 @@
 # Pathwise / Todoku
 
-The Node analysis module implements **static source analysis and call-graph construction only**. The existing React starter is unchanged.
+The Node analysis module implements **static source analysis and call-graph construction only**. The React UI provides a reachability dashboard with finding search, verdict filters, path inspection, and JSON import/export. The current checkout has no scan API; sample findings are illustrative and are explicitly labeled.
 
 ## Run
 
@@ -84,3 +84,28 @@ npx oxfmt --check analyzer test tsconfig.analyzer.json package.json README.md
 ```
 
 Reachability classification, risk scoring, reporting, CLI wiring, dependency resolution, and source acquisition are intentionally left for separate modules.
+
+## Web dashboard
+
+Run `npm run dev` and open the printed local URL. `npm run build` produces the production app and analyzer.
+
+The dashboard starts with illustrative sample findings, not a live scan. Select a finding to inspect its explanation and path, filter by verdict, or export JSON. Use **Import report** to load a browser-local report. Exporting the sample provides a complete format example:
+
+```json
+{
+  "findings": [{
+    "id": "ADVISORY-ID",
+    "name": "package-name",
+    "version": "1.0.0",
+    "severity": "high",
+    "verdict": "undetermined",
+    "title": "Advisory title",
+    "direct": true,
+    "fixed": "1.0.1",
+    "path": [],
+    "reason": "Analysis explanation"
+  }]
+}
+```
+
+Severity accepts `critical`, `high`, `moderate`, or `low`; verdict accepts `reachable`, `unreachable`, or `undetermined`. Import validates the complete report before replacing the current view. Reports are held in memory and are not uploaded or persisted. This UI schema is an explicit integration boundary, not an assumed output format for the unfinished pipeline.
