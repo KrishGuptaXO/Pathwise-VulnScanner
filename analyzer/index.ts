@@ -1,5 +1,5 @@
 import ts from "typescript";
-import { loadModules, location } from "./loader.js";
+import { canonical, loadModules, location } from "./loader.js";
 import { packageId } from "./types.js";
 import type { AnalysisInput, CallGraph, GraphEdge, GraphNode } from "./types.js";
 export type * from "./types.js";
@@ -38,13 +38,16 @@ export async function analyzeProject(input: AnalysisInput): Promise<CallGraph> {
     jsx: ts.JsxEmit.Preserve,
   };
   const host = ts.createCompilerHost(options);
-  host.getSourceFile = (file) => modules.get(file)?.source;
-  host.fileExists = (file) => modules.has(file);
-  host.readFile = (file) => modules.get(file)?.source.text;
+  // TypeScript passes forward-slash paths on Windows; our module keys use the native separator.
+  const byCanonical = new Map([...modules].map(([key, mod]) => [canonical(key), mod] as const));
+  const lookup = (file: string) => modules.get(file) ?? byCanonical.get(canonical(file));
+  host.getSourceFile = (file) => lookup(file)?.source;
+  host.fileExists = (file) => lookup(file) !== undefined;
+  host.readFile = (file) => lookup(file)?.source.text;
   host.writeFile = () => {};
   host.resolveModuleNames = (names, containingFile) =>
     names.map((name) => {
-      const file = modules.get(containingFile)?.imports.get(name);
+      const file = lookup(containingFile)?.imports.get(name);
       return file ? { resolvedFileName: file, isExternalLibraryImport: false } : undefined;
     });
   const program = ts.createProgram([...modules.keys()], options, host);
@@ -130,7 +133,7 @@ export async function analyzeProject(input: AnalysisInput): Promise<CallGraph> {
       return undefined;
     const argument = expression.arguments[0];
     return argument && ts.isStringLiteralLike(argument)
-      ? modules.get(expression.getSourceFile().fileName)?.imports.get(argument.text)
+      ? lookup(expression.getSourceFile().fileName)?.imports.get(argument.text)
       : undefined;
   }
 

@@ -6,6 +6,11 @@ import { packageId } from "./types.js";
 import type { AnalysisInput, AnalysisDiagnostic, Location, PackageInstance } from "./types.js";
 
 export const slash = (value: string): string => value.split(path.sep).join("/");
+/**
+ * TypeScript hands compiler hosts forward-slash paths, even on Windows, where our own keys use
+ * backslashes. Compare through this form so file lookups behave the same on every platform.
+ */
+export const canonical = (value: string): string => slash(path.resolve(value));
 export const inside = (root: string, file: string): boolean => {
   const relative = path.relative(root, file);
   return (
@@ -176,8 +181,9 @@ export async function loadModules(input: AnalysisInput): Promise<{
       target: ts.ScriptTarget.Latest,
     };
     const parseHost = ts.createCompilerHost(parseOptions, true);
-    parseHost.readFile = (candidate) => (candidate === file ? text : undefined);
-    parseHost.fileExists = (candidate) => candidate === file;
+    const canonicalFile = canonical(file);
+    parseHost.readFile = (candidate) => (canonical(candidate) === canonicalFile ? text : undefined);
+    parseHost.fileExists = (candidate) => canonical(candidate) === canonicalFile;
     const scopeProgram = ts.createProgram([file], parseOptions, parseHost);
     const source = scopeProgram.getSourceFile(file)!;
     const scopeChecker = scopeProgram.getTypeChecker();
